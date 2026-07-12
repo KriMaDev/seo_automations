@@ -1,0 +1,1 @@
+"""Collector implementations for gathering SEO/GEO news from various sources."""

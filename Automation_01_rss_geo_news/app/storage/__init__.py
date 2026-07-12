@@ -1,0 +1,1 @@
+"""Storage layer: writing collected articles to disk and tracking dedup state."""

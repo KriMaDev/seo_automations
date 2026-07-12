@@ -1,0 +1,1 @@
+"""SEO/GEO news automation package."""
