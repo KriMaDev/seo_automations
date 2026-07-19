@@ -1,0 +1,24 @@
+# Configured RSS feeds for the collector (Sprint 4+). Add or remove
+# feeds by editing this list — no code changes needed.
+#
+# Each feed URL was verified live (HTTP 200, real recent entries) on
+# 2026-07-19.
+feeds:
+  - name: Search Engine Journal
+    url: https://www.searchenginejournal.com/feed/
+  - name: Search Engine Land
+    url: https://searchengineland.com/feed
+  - name: Google Search Central
+    url: https://developers.google.com/search/blog/feed.xml
+  - name: Ahrefs Blog
+    url: https://ahrefs.com/blog/feed/
+  - name: Moz Blog
+    url: https://moz.com/blog/feed
+  - name: Semrush Blog
+    url: https://www.semrush.com/blog/feed/
+  - name: OpenAI News
+    url: https://openai.com/news/rss.xml
+
+# Anthropic News: omitted — as of 2026-07-19, Anthropic does not
+# publish an official RSS feed (checked common URL patterns and page
+# autodiscovery; all 404/absent). Add an entry above if/when they do.

@@ -15,6 +15,11 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List, Optional
+
+import yaml
+
+from app.models import FeedSource
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _CONFIG_DIR = _PROJECT_ROOT / "config"
@@ -40,3 +45,15 @@ class Settings:
 
 
 settings = Settings()
+
+
+def load_feed_sources(path: Optional[Path] = None) -> List[FeedSource]:
+    """Load and validate the configured RSS feed list.
+
+    Reads the `feeds:` list from a YAML file (defaulting to
+    settings.sources_file) — add or remove feeds by editing that file,
+    no code changes needed. Does not fetch or read the feeds themselves.
+    """
+    source_path = path or settings.sources_file
+    raw = yaml.safe_load(source_path.read_text(encoding="utf-8")) or {}
+    return [FeedSource(**feed) for feed in raw.get("feeds", [])]

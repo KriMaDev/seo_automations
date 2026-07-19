@@ -71,3 +71,18 @@ class Article(BaseModel):
         still valid, just lower priority for discovery purposes.
         """
         return bool(self.summary) and bool(self.categories or self.keywords)
+
+
+class FeedSource(BaseModel):
+    """A single configured RSS feed to collect from."""
+
+    name: str
+    url: HttpUrl
+
+    @field_validator("name")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
