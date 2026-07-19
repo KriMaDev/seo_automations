@@ -30,6 +30,21 @@ def test_optional_fields_default_to_none():
     assert article.author is None
 
 
+def test_categories_and_keywords_default_to_empty_list():
+    article = _make()
+    assert article.categories == []
+    assert article.keywords == []
+
+
+def test_categories_and_keywords_are_cleaned():
+    article = _make(
+        categories=["  SEO  ", "", "SEO", "GEO", "CMS SEO"],
+        keywords=["YouTube SEO", "  ", "YouTube SEO", "Shopify SEO", "Backlinks"],
+    )
+    assert article.categories == ["SEO", "GEO", "CMS SEO"]
+    assert article.keywords == ["YouTube SEO", "Shopify SEO", "Backlinks"]
+
+
 def test_collected_at_defaults_to_now():
     before = datetime.now(timezone.utc)
     article = _make()
@@ -73,3 +88,23 @@ def test_article_is_immutable():
     article = _make()
     with pytest.raises(ValidationError):
         article.title = "Changed"
+
+
+def test_is_quality_candidate_true_with_summary_and_category():
+    article = _make(summary="A useful summary.", categories=["SEO"])
+    assert article.is_quality_candidate is True
+
+
+def test_is_quality_candidate_true_with_summary_and_keyword_only():
+    article = _make(summary="A useful summary.", keywords=["Backlinks"])
+    assert article.is_quality_candidate is True
+
+
+def test_is_quality_candidate_false_without_summary():
+    article = _make(categories=["SEO"], keywords=["Backlinks"])
+    assert article.is_quality_candidate is False
+
+
+def test_is_quality_candidate_false_without_categories_or_keywords():
+    article = _make(summary="A useful summary.")
+    assert article.is_quality_candidate is False
