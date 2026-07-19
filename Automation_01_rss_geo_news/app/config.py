@@ -1,42 +1,42 @@
 """Central configuration for the SEO/GEO automation project.
 
-Loads environment variables and defines the shared paths used across the
-collection pipeline (data directories, config files, logging).
+Defines the shared paths and settings used across the collection
+pipeline. `settings` is the only public surface — import it rather than
+reaching for path constants elsewhere in this module.
+
+Tests that need an isolated location (e.g. a tmp_path for data or a
+config fixture) can build a variant with
+`dataclasses.replace(settings, raw_articles_dir=tmp_path, ...)` instead
+of hand-rolling a fresh Settings().
 """
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-CONFIG_DIR = PROJECT_ROOT / "config"
-DATA_DIR = PROJECT_ROOT / "data"
-RAW_ARTICLES_DIR = DATA_DIR / "raw_articles"
-PROCESSED_DIR = DATA_DIR / "processed"
-OUTPUTS_DIR = DATA_DIR / "outputs"
-LOGS_DIR = PROJECT_ROOT / "logs"
-
-SOURCES_FILE = CONFIG_DIR / "sources.yaml"
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_CONFIG_DIR = _PROJECT_ROOT / "config"
+_DATA_DIR = _PROJECT_ROOT / "data"
+_LOGS_DIR = _PROJECT_ROOT / "logs"
 
 
 @dataclass(frozen=True)
 class Settings:
-    """Application-wide settings, populated from environment variables."""
+    """Application-wide settings. Override via dataclasses.replace(settings, ...)."""
 
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
-    log_file: Path = LOGS_DIR / "automation.log"
+    log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
 
-    project_root: Path = PROJECT_ROOT
-    config_dir: Path = CONFIG_DIR
-    data_dir: Path = DATA_DIR
-    raw_articles_dir: Path = RAW_ARTICLES_DIR
-    processed_dir: Path = PROCESSED_DIR
-    outputs_dir: Path = OUTPUTS_DIR
-    logs_dir: Path = LOGS_DIR
-    sources_file: Path = SOURCES_FILE
+    project_root: Path = _PROJECT_ROOT
+    config_dir: Path = _CONFIG_DIR
+    data_dir: Path = _DATA_DIR
+    raw_articles_dir: Path = _DATA_DIR / "raw_articles"
+    processed_dir: Path = _DATA_DIR / "processed"
+    outputs_dir: Path = _DATA_DIR / "outputs"
+    logs_dir: Path = _LOGS_DIR
+    log_file: Path = _LOGS_DIR / "automation.log"
+    sources_file: Path = _CONFIG_DIR / "sources.yaml"
 
 
 settings = Settings()
