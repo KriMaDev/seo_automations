@@ -7,14 +7,14 @@ it never stops collection of the rest.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional, Tuple
 
 import feedparser
 from pydantic import ValidationError
 
 from app.collectors.base import BaseCollector
-from app.config import load_feed_sources
+from app.config import load_collection_window_days, load_feed_sources
 from app.logger import get_logger
 from app.models import Article, FeedSource
 
@@ -24,8 +24,15 @@ logger = get_logger(__name__)
 class RSSCollector(BaseCollector):
     """Collects articles from a configured list of RSS feeds."""
 
-    def __init__(self, sources: Optional[List[FeedSource]] = None) -> None:
+    def __init__(
+        self,
+        sources: Optional[List[FeedSource]] = None,
+        max_age_days: Optional[int] = None,
+    ) -> None:
         self.sources = sources if sources is not None else load_feed_sources()
+        self.max_age_days = (
+            max_age_days if max_age_days is not None else load_collection_window_days()
+        )
 
     def collect(self) -> List[Article]:
         articles: List[Article] = []
@@ -47,13 +54,25 @@ class RSSCollector(BaseCollector):
                 "Feed parse issue for %s: %s", source.name, parsed.get("bozo_exception")
             )
 
+        cutoff = datetime.now(timezone.utc) - timedelta(days=self.max_age_days)
         articles: List[Article] = []
+        skipped_old = 0
         for entry in parsed.get("entries", []):
             article = self._parse_entry(source, entry)
-            if article is not None:
-                articles.append(article)
+            if article is None:
+                continue
+            if article.published_at and article.published_at < cutoff:
+                skipped_old += 1
+                continue
+            articles.append(article)
 
-        logger.info("Parsed %d article(s) from %s", len(articles), source.name)
+        logger.info(
+            "Parsed %d article(s) from %s (%d outside %d-day window)",
+            len(articles),
+            source.name,
+            skipped_old,
+            self.max_age_days,
+        )
         return articles
 
     def _parse_entry(self, source: FeedSource, entry: Any) -> Optional[Article]:

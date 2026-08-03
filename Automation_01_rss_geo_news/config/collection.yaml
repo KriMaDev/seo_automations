@@ -1,0 +1,8 @@
+# Tunable RSS collection behavior. Edit values here — no code changes
+# needed.
+
+# Only keep articles published within this many days of now. Some
+# feeds (e.g. OpenAI News) return their entire historical archive on
+# every fetch rather than just recent items — this bounds that.
+# Set to 1 for a steady-state daily run once backfill isn't needed.
+collection_window_days: 14

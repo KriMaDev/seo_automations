@@ -42,9 +42,12 @@ class Settings:
     logs_dir: Path = _LOGS_DIR
     log_file: Path = _LOGS_DIR / "automation.log"
     sources_file: Path = _CONFIG_DIR / "sources.yaml"
+    collection_settings_file: Path = _CONFIG_DIR / "collection.yaml"
 
 
 settings = Settings()
+
+_DEFAULT_COLLECTION_WINDOW_DAYS = 14
 
 
 def load_feed_sources(path: Optional[Path] = None) -> List[FeedSource]:
@@ -57,3 +60,18 @@ def load_feed_sources(path: Optional[Path] = None) -> List[FeedSource]:
     source_path = path or settings.sources_file
     raw = yaml.safe_load(source_path.read_text(encoding="utf-8")) or {}
     return [FeedSource(**feed) for feed in raw.get("feeds", [])]
+
+
+def load_collection_window_days(path: Optional[Path] = None) -> int:
+    """Load how many days back the collector should keep articles from.
+
+    Reads `collection_window_days` from a YAML file (defaulting to
+    settings.collection_settings_file) — tune it there, no code changes
+    needed (e.g. set to 1 for a steady-state daily run). Falls back to
+    a default if the file or key is missing.
+    """
+    source_path = path or settings.collection_settings_file
+    if not source_path.exists():
+        return _DEFAULT_COLLECTION_WINDOW_DAYS
+    raw = yaml.safe_load(source_path.read_text(encoding="utf-8")) or {}
+    return int(raw.get("collection_window_days", _DEFAULT_COLLECTION_WINDOW_DAYS))

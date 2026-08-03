@@ -5,12 +5,18 @@ import pytest
 from pydantic import ValidationError
 
 from app import config as config_module
-from app.config import load_feed_sources, settings
+from app.config import load_collection_window_days, load_feed_sources, settings
 from app.models import FeedSource
 
 
 def _write_sources(tmp_path, content):
     path = tmp_path / "sources.yaml"
+    path.write_text(textwrap.dedent(content), encoding="utf-8")
+    return path
+
+
+def _write_collection_settings(tmp_path, content):
+    path = tmp_path / "collection.yaml"
     path.write_text(textwrap.dedent(content), encoding="utf-8")
     return path
 
@@ -96,3 +102,22 @@ def test_real_sources_file_parses_successfully():
         "Semrush Blog",
         "OpenAI News",
     }
+
+
+def test_load_collection_window_days_reads_configured_value(tmp_path):
+    path = _write_collection_settings(tmp_path, "collection_window_days: 3")
+    assert load_collection_window_days(path) == 3
+
+
+def test_load_collection_window_days_defaults_when_file_missing(tmp_path):
+    missing_path = tmp_path / "does_not_exist.yaml"
+    assert load_collection_window_days(missing_path) == 14
+
+
+def test_load_collection_window_days_defaults_when_key_missing(tmp_path):
+    path = _write_collection_settings(tmp_path, "some_other_key: 3")
+    assert load_collection_window_days(path) == 14
+
+
+def test_real_collection_settings_file_parses_successfully():
+    assert load_collection_window_days(settings.collection_settings_file) == 14
