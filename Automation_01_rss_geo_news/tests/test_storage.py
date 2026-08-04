@@ -82,3 +82,39 @@ def test_write_articles_writes_only_new_articles(tmp_path):
 
 def test_write_articles_returns_empty_list_for_no_articles(tmp_path):
     assert write_articles([], raw_articles_dir=tmp_path) == []
+
+
+def test_write_article_creates_raw_articles_dir_if_missing(tmp_path):
+    fresh_dir = tmp_path / "does" / "not" / "exist" / "yet"
+    article = _make_article()
+
+    path = write_article(article, raw_articles_dir=fresh_dir)
+
+    assert path is not None
+    assert path.exists()
+
+
+def test_write_articles_partitions_by_each_articles_own_date(tmp_path):
+    articles = [
+        _make_article(url="https://example.com/a", collected_at=datetime(2026, 8, 1, tzinfo=timezone.utc)),
+        _make_article(url="https://example.com/b", collected_at=datetime(2026, 8, 2, tzinfo=timezone.utc)),
+    ]
+
+    written = write_articles(articles, raw_articles_dir=tmp_path)
+
+    parents = {path.parent.name for path in written}
+    assert parents == {"2026-08-01", "2026-08-02"}
+
+
+def test_write_articles_second_run_writes_nothing_new(tmp_path):
+    articles = [
+        _make_article(url="https://example.com/a"),
+        _make_article(url="https://example.com/b"),
+    ]
+
+    first_run = write_articles(articles, raw_articles_dir=tmp_path)
+    second_run = write_articles(articles, raw_articles_dir=tmp_path)
+
+    assert len(first_run) == 2
+    assert len(second_run) == 0
+    assert len(list(tmp_path.rglob("*.json"))) == 2

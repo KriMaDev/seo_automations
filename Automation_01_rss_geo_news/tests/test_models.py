@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import pytest
@@ -108,3 +109,48 @@ def test_is_quality_candidate_false_without_summary():
 def test_is_quality_candidate_false_without_categories_or_keywords():
     article = _make(summary="A useful summary.")
     assert article.is_quality_candidate is False
+
+
+# --- JSON serialization ---------------------------------------------------
+
+
+def test_model_dump_json_produces_valid_json_with_expected_fields():
+    article = _make(
+        summary="A summary.",
+        author="Jane Doe",
+        categories=["SEO"],
+        keywords=["Backlinks"],
+        published_at=datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc),
+    )
+    parsed = json.loads(article.model_dump_json())
+
+    assert parsed["title"] == "Example Title"
+    assert parsed["url"] == "https://example.com/article"
+    assert parsed["source"] == "Example Feed"
+    assert parsed["categories"] == ["SEO"]
+    assert parsed["keywords"] == ["Backlinks"]
+    assert parsed["summary"] == "A summary."
+    assert parsed["author"] == "Jane Doe"
+
+
+def test_model_dump_json_serializes_datetimes_as_iso8601_strings():
+    article = _make(published_at=datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc))
+    parsed = json.loads(article.model_dump_json())
+
+    # Round-trippable ISO 8601 strings, not e.g. a raw timestamp number.
+    assert isinstance(parsed["published_at"], str)
+    assert datetime.fromisoformat(parsed["published_at"].replace("Z", "+00:00")) == (
+        article.published_at
+    )
+    assert isinstance(parsed["collected_at"], str)
+
+
+def test_article_round_trips_through_json():
+    original = _make(
+        summary="A summary.",
+        categories=["SEO", "GEO"],
+        published_at=datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc),
+    )
+    restored = Article.model_validate_json(original.model_dump_json())
+
+    assert restored == original

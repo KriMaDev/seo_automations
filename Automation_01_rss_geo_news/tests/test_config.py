@@ -49,6 +49,18 @@ def test_load_feed_sources_missing_feeds_key_returns_empty_list(tmp_path):
     assert load_feed_sources(path) == []
 
 
+def test_load_feed_sources_rejects_feed_missing_url(tmp_path):
+    path = _write_sources(
+        tmp_path,
+        """
+        feeds:
+          - name: No URL Feed
+        """,
+    )
+    with pytest.raises(ValidationError):
+        load_feed_sources(path)
+
+
 def test_load_feed_sources_rejects_invalid_url(tmp_path):
     path = _write_sources(
         tmp_path,
