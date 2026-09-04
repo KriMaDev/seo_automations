@@ -73,6 +73,22 @@ class Article(BaseModel):
         return bool(self.summary) and bool(self.categories or self.keywords)
 
 
+class ScoredArticle(Article):
+    """An Article enriched with relevance scoring against configured topics.
+
+    Produced by app.processing.topic_matcher — never constructed
+    directly during collection. relevance_score is the count of
+    distinct keywords (across all matched topics) found in the
+    article's own text; it's a cheap, deterministic v1 signal, not a
+    quality judgment (see FUTURE_IDEAS.md for the known ceiling of
+    keyword matching and the planned upgrade path).
+    """
+
+    matched_topics: List[str] = Field(default_factory=list)
+    relevance_score: int = 0
+    is_relevant: bool = False
+
+
 class FeedSource(BaseModel):
     """A single configured RSS feed to collect from."""
 
