@@ -86,3 +86,35 @@ class FeedSource(BaseModel):
         if not stripped:
             raise ValueError("must not be blank")
         return stripped
+
+
+class Topic(BaseModel):
+    """A configured relevance topic: a name plus the keywords that match it.
+
+    Keyword matching against this topic is done case-insensitively
+    elsewhere (the scorer) — keywords are stored here in whatever case
+    is natural to read/edit in topics.yaml.
+    """
+
+    name: str
+    keywords: List[str]
+
+    @field_validator("name")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
+
+    @field_validator("keywords", mode="before")
+    @classmethod
+    def _clean_keywords(cls, value: Optional[List[str]]) -> List[str]:
+        seen: dict[str, None] = {}
+        for raw in value or []:
+            cleaned = raw.strip()
+            if cleaned:
+                seen.setdefault(cleaned, None)
+        if not seen:
+            raise ValueError("must have at least one non-blank keyword")
+        return list(seen)

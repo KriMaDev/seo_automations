@@ -19,7 +19,7 @@ from typing import List, Optional
 
 import yaml
 
-from app.models import FeedSource
+from app.models import FeedSource, Topic
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _CONFIG_DIR = _PROJECT_ROOT / "config"
@@ -43,6 +43,7 @@ class Settings:
     log_file: Path = _LOGS_DIR / "automation.log"
     sources_file: Path = _CONFIG_DIR / "sources.yaml"
     collection_settings_file: Path = _CONFIG_DIR / "collection.yaml"
+    topics_file: Path = _CONFIG_DIR / "topics.yaml"
 
 
 settings = Settings()
@@ -75,3 +76,15 @@ def load_collection_window_days(path: Optional[Path] = None) -> int:
         return _DEFAULT_COLLECTION_WINDOW_DAYS
     raw = yaml.safe_load(source_path.read_text(encoding="utf-8")) or {}
     return int(raw.get("collection_window_days", _DEFAULT_COLLECTION_WINDOW_DAYS))
+
+
+def load_topics(path: Optional[Path] = None) -> List[Topic]:
+    """Load and validate the configured relevance topics.
+
+    Reads the `topics:` list from a YAML file (defaulting to
+    settings.topics_file) — add, remove, or edit a topic's keywords by
+    editing that file, no code changes needed.
+    """
+    source_path = path or settings.topics_file
+    raw = yaml.safe_load(source_path.read_text(encoding="utf-8")) or {}
+    return [Topic(**topic) for topic in raw.get("topics", [])]

@@ -1,0 +1,79 @@
+# Topics used to score/rank collected articles by relevance (Sprint 9+).
+# Add, remove, or edit topics and keywords here — no code changes
+# needed. Matching is case-insensitive, so casing here is just for
+# readability. An article can match more than one topic.
+#
+# Starter keyword lists below are a reasonable first pass — tune freely
+# once real scoring results are visible.
+topics:
+  - name: SEO
+    keywords:
+      - SEO
+      - search engine optimization
+      - organic search
+      - organic traffic
+      - search rankings
+      - google ranking
+      - on-page SEO
+      - technical SEO
+      - link building
+      - backlinks
+      - keyword research
+      - SERP
+
+  - name: GEO
+    keywords:
+      - GEO
+      - generative engine optimization
+      - answer engine optimization
+      - AEO
+      - AI search
+      - AI overviews
+      - AI Mode
+      - generative AI search
+      - LLM visibility
+      - AI citations
+      - ChatGPT search
+      - Perplexity
+
+  - name: Shopify SEO
+    keywords:
+      - Shopify SEO
+      - Shopify
+      - ecommerce SEO
+      - Shopify store
+      - Shopify app
+      - product page SEO
+
+  - name: YouTube SEO
+    keywords:
+      - YouTube SEO
+      - YouTube algorithm
+      - YouTube search
+      - YouTube ranking
+      - YouTube optimization
+      - YouTube thumbnail
+      - YouTube tags
+
+  - name: Video SEO
+    keywords:
+      - video SEO
+      - video content
+      - video marketing
+      - video optimization
+      - video transcript
+      - video schema
+      - TikTok SEO
+
+  - name: Social SEO
+    keywords:
+      - social SEO
+      - social media optimization
+      - SMO
+      - social media SEO
+      - social signals
+      - social search
+      - social media marketing
+      - Instagram SEO
+      - LinkedIn SEO
+      - TikTok search
