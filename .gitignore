@@ -30,3 +30,6 @@ env/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Local-only planning notes, not part of the published project
+**/FUTURE_IDEAS.md
