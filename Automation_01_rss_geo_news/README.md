@@ -1,15 +1,15 @@
-# Automation 01 — RSS/GEO News Collector
+# Automation 01 — RSS/GEO News Collector & Ranker
 
 This automation collects the latest SEO and GEO (Generative Engine
 Optimization) news from a configured list of RSS feeds (Search Engine
 Journal, Search Engine Land, Google Search Central, Ahrefs Blog, Moz
-Blog, Semrush Blog, OpenAI News) and saves each new article as its own
-JSON file on your computer. It's the first stage of a larger pipeline —
-this part only collects and stores; it doesn't summarize, filter, or
-write anything yet.
+Blog, Semrush Blog, OpenAI News), scores each article against a
+configurable list of topics, and produces a ranked list of the most
+relevant recent articles — ready to be the source material for a
+later stage (not built yet) that writes educational video scripts.
 
 Nothing here calls any paid API and nothing leaves your machine except
-the RSS feed requests themselves.
+the RSS feed requests and the article pages themselves.
 
 ## What you need before starting
 
@@ -70,60 +70,61 @@ runner).
 > use the direct `.venv\Scripts\python.exe` form instead — it always
 > works.
 
-## 3. Run it
+## 3. The three commands you'll use
 
-**Windows:**
+Everything you'll ever run day-to-day is one of these three. On
+macOS/Linux, replace `.venv\Scripts\python.exe` with `.venv/bin/python`.
+
+**Command 1 — run the whole pipeline:**
 ```
 .venv\Scripts\python.exe main.py
 ```
+Collects the latest articles from every feed, then scores and ranks
+them. This is the one you'll use almost all the time — a normal day's
+run. Safe to run repeatedly: already-collected articles are never
+duplicated.
 
-**macOS/Linux:**
+**Command 2 — re-score without collecting anything new:**
 ```
-.venv/bin/python main.py
+.venv\Scripts\python.exe process_articles.py
 ```
+Use this after editing `config/topics.yaml` (see step 5) when you want
+updated rankings without waiting on a fresh collection. Re-reads
+everything already collected and rewrites the scores/ranking.
 
-You'll see live progress in the terminal as it fetches each feed, and
-a one-line summary at the end, e.g.:
-
+**Command 3 — run the test suite:**
 ```
-Run complete: 7 feed(s) processed, 62 article(s) found, 4 written, 58 skipped (duplicate), 0 warning(s), 0 error(s), 12.3s
+.venv\Scripts\python.exe run_tests.py
 ```
-
-Run it again right away and you'll see most (or all) articles reported
-as "skipped (duplicate)" — that's expected. The automation remembers
-what it already saved and never saves the same article twice, so it's
-always safe to run more than once.
+Checks that everything still works. Optional, but worth running after
+you change any config file or code — tells you immediately if
+something broke.
 
 ## 4. Where to find the results
 
-Every new article is saved as its own `.json` file under:
+Open **`data/outputs/ranked_articles.md`** — this is the one file
+meant to just be opened and read. It lists every scored article,
+highest-relevance first, e.g.:
 
 ```
-data/raw_articles/YYYY-MM-DD/
+1. [3] Getting Your Product Into ChatGPT Isn't The Hard Part — SEO, GEO
+   https://www.searchenginejournal.com/...
 ```
 
-(one folder per day, named after the date the article was collected).
-Each file looks like this:
+The same ranked list also exists as `data/outputs/ranked_articles.json`
+(same information, machine-readable). Behind those, every article
+passes through two intermediate stages if you want to inspect them:
 
-```json
-{
-  "title": "How to measure AI share of voice using Semrush",
-  "url": "https://www.semrush.com/blog/...",
-  "source": "Semrush Blog",
-  "categories": ["SEO"],
-  "keywords": [],
-  "published_at": "2026-07-31T12:30:09Z",
-  "summary": "A short excerpt of the article...",
-  "author": "Jane Doe",
-  "collected_at": "2026-08-04T14:22:17Z"
-}
-```
+- `data/raw_articles/YYYY-MM-DD/*.json` — exactly what was collected,
+  one file per article, one folder per day
+- `data/processed/YYYY-MM-DD/*.json` — the same articles with scoring
+  added (`matched_topics`, `relevance_score`, `is_relevant`)
 
 A full run log (everything printed to the terminal, plus a bit more
-detail) is also saved to `logs/automation.log`, in case you need to
-check what happened after the fact.
+detail, including per-feed/per-article activity) is also saved to
+`logs/automation.log`.
 
-## 5. Customize what it collects
+## 5. Customize what it collects and how it scores
 
 Nothing here requires touching any code — everything tunable lives in
 plain text files under `config/`:
@@ -132,30 +133,31 @@ plain text files under `config/`:
   copying the `- name: ... / url: ...` pattern, or delete an entry to
   stop collecting from it.
 - **`config/collection.yaml`** — `collection_window_days` controls how
-  far back to look. It's currently set to `14` (good for an initial
-  run so you get a real batch of articles). Once you're running this
-  daily going forward, you can lower it to `1` so each run only picks
-  up what's genuinely new since the day before.
-
-## 6. Run the tests (optional, but recommended after any change)
-
-```
-.venv\Scripts\python.exe -m pytest
-```
-
-This runs the full automated test suite (60+ checks covering article
-parsing, deduplication, storage, and configuration loading) and tells
-you immediately if something's broken.
+  far back to look. Currently set to `7`. Once you're running this
+  daily going forward, consider lowering it to `1` so each run only
+  picks up what's genuinely new since the day before.
+- **`config/topics.yaml`** — the topics articles are scored against
+  (SEO, GEO, Shopify SEO, YouTube SEO, Video SEO, Social SEO), each
+  with its own keyword list. Add, remove, or edit a topic's keywords
+  freely — matching is case-insensitive and whole-word (so "GEO"
+  matches "GEO-focused" but not "geography"). After editing this file,
+  run Command 2 (above) to see the new rankings.
 
 ## Project layout, briefly
 
 ```
 Automation_01_rss_geo_news/
-├── main.py                  # run this to start a collection
+├── main.py                   # Command 1: collect + score + rank, all in one
+├── process_articles.py       # Command 2: re-score already-collected articles only
+├── run_tests.py              # Command 3: run the test suite
 ├── config/
-│   ├── sources.yaml          # which RSS feeds to collect from
-│   └── collection.yaml       # how far back to collect
-├── data/raw_articles/        # output: one JSON file per article
+│   ├── sources.yaml           # which RSS feeds to collect from
+│   ├── collection.yaml        # how far back to collect
+│   └── topics.yaml            # topics + keywords used for scoring
+├── data/
+│   ├── raw_articles/           # what was collected, one file per article
+│   ├── processed/              # the same articles, with scores added
+│   └── outputs/                 # ranked_articles.md / .json — the final view
 ├── logs/automation.log       # run history / debugging
 ├── app/                      # the actual source code
 └── tests/                    # automated tests
@@ -163,12 +165,14 @@ Automation_01_rss_geo_news/
 
 ## What this automation does *not* do (yet)
 
-This is deliberately scoped to collection only. It does not currently:
-- Judge whether an article is actually relevant/high-quality (every
-  structurally valid article gets saved — filtering happens in a
-  later stage, not yet built)
+This is deliberately scoped to collecting, scoring, and ranking — not
+generating the videos themselves. It does not currently:
 - Fetch full article text (only the title and a short excerpt are
-  available from RSS — see the project's notes on this for why)
+  available from RSS — a future stage will fetch full text for just
+  the top-ranked articles, not everything collected)
+- Use an LLM for scoring (relevance is judged by keyword matching
+  today — deterministic and free, with known limits on nuance)
+- Generate any video script text
 - Run automatically on a schedule (you need to run `main.py` yourself
   for now; scheduling it, e.g. via Windows Task Scheduler, is a future
   step)
@@ -176,10 +180,14 @@ This is deliberately scoped to collection only. It does not currently:
 ## Troubleshooting
 
 - **`ModuleNotFoundError: No module named 'feedparser'` (or similar)**
-  — you ran `python main.py` with your system Python instead of the
-  project's own copy. Use `.venv\Scripts\python.exe main.py` (Windows)
-  or `.venv/bin/python main.py` (macOS/Linux) instead.
+  — you ran a script with your system Python instead of the project's
+  own copy. Use `.venv\Scripts\python.exe main.py` (Windows) or
+  `.venv/bin/python main.py` (macOS/Linux) instead — same for the
+  other two commands.
 - **A feed shows a `WARNING` in the log** — this is normal and
   expected sometimes (feeds occasionally have minor formatting quirks
   or hiccups). The automation logs it and keeps going; it only becomes
   a problem if a feed shows `0 articles` on every run.
+- **A topic in `config/topics.yaml` always shows `0` matches** — check
+  the "Topic breakdown" line in the log after running Command 2. If a
+  topic never matches anything, its keyword list may need broadening.
