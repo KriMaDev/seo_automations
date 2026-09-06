@@ -15,28 +15,14 @@ import time
 from app.collectors.rss_collector import RSSCollector
 from app.logger import get_logger
 from app.storage.writer import write_articles
+from app.utils import LogOutcomeCounter
 
 logger = get_logger(__name__)
 
 
-class _OutcomeCounter(logging.Handler):
-    """Counts WARNING/ERROR-and-above records emitted during a run."""
-
-    def __init__(self) -> None:
-        super().__init__(level=logging.WARNING)
-        self.warnings = 0
-        self.errors = 0
-
-    def emit(self, record: logging.LogRecord) -> None:
-        if record.levelno >= logging.ERROR:
-            self.errors += 1
-        else:
-            self.warnings += 1
-
-
 def run() -> None:
     """Run one full collect-and-store cycle, logging a summary at the end."""
-    counter = _OutcomeCounter()
+    counter = LogOutcomeCounter()
     root_logger = logging.getLogger()
     root_logger.addHandler(counter)
 

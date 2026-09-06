@@ -28,6 +28,9 @@ env/
 .vscode/
 .idea/
 
+# Windows folder customization noise
+desktop.ini
+
 # Claude Code local settings
 .claude/settings.local.json
 
