@@ -61,3 +61,18 @@ def test_read_raw_articles_skips_file_failing_validation(tmp_path, caplog):
 
     assert articles == []
     assert any("invalid.json" in record.message for record in caplog.records)
+
+
+def test_read_raw_articles_logs_summary_with_read_and_skipped_counts(tmp_path, caplog):
+    day_dir = tmp_path / "2026-08-01"
+    day_dir.mkdir()
+    (day_dir / "good.json").write_text(_make_article().model_dump_json(), encoding="utf-8")
+    (day_dir / "broken.json").write_text("{not valid json", encoding="utf-8")
+
+    with caplog.at_level("INFO"):
+        read_raw_articles(tmp_path)
+
+    summary_lines = [r.message for r in caplog.records if r.message.startswith("Read ")]
+    assert len(summary_lines) == 1
+    assert "Read 1 article(s)" in summary_lines[0]
+    assert "1 skipped" in summary_lines[0]

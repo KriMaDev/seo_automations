@@ -45,6 +45,58 @@ def test_run_orchestrates_read_score_write_rank_and_logs_summary(monkeypatch, ca
     assert any("1 article(s) read" in record.message for record in caplog.records)
 
 
+def test_run_logs_topic_breakdown_including_zero_match_topics(monkeypatch, caplog):
+    # GEO is configured but nothing in the article matches it — it should
+    # still show up in the breakdown at 0, not disappear silently.
+    topics = [Topic(name="SEO", keywords=["seo"]), Topic(name="GEO", keywords=["geo"])]
+    articles = [_article(title="An SEO Article")]
+
+    monkeypatch.setattr(pipeline_module, "load_topics", lambda: topics)
+    monkeypatch.setattr(pipeline_module, "read_raw_articles", lambda: articles)
+    monkeypatch.setattr(
+        pipeline_module, "write_scored_articles", lambda scored, processed_dir=None: []
+    )
+    monkeypatch.setattr(
+        pipeline_module,
+        "write_ranked_output",
+        lambda ranked, outputs_dir=None: ("/fake/ranked_articles.json", "/fake/ranked_articles.md"),
+    )
+
+    with caplog.at_level("INFO"):
+        pipeline_module.run()
+
+    breakdown_lines = [r.message for r in caplog.records if "Topic breakdown" in r.message]
+    assert len(breakdown_lines) == 1
+    assert "SEO=1" in breakdown_lines[0]
+    assert "GEO=0" in breakdown_lines[0]
+
+
+def test_run_logs_per_article_debug_details_when_debug_enabled(monkeypatch, caplog):
+    topics = [Topic(name="SEO", keywords=["seo"])]
+    articles = [_article(title="An SEO Article")]
+
+    monkeypatch.setattr(pipeline_module, "load_topics", lambda: topics)
+    monkeypatch.setattr(pipeline_module, "read_raw_articles", lambda: articles)
+    monkeypatch.setattr(
+        pipeline_module, "write_scored_articles", lambda scored, processed_dir=None: []
+    )
+    monkeypatch.setattr(
+        pipeline_module,
+        "write_ranked_output",
+        lambda ranked, outputs_dir=None: ("/fake/ranked_articles.json", "/fake/ranked_articles.md"),
+    )
+
+    # The "app" logger has its own explicit level (settings.log_level,
+    # INFO by default) — targeting root alone wouldn't let DEBUG records
+    # through, since a logger's own level takes precedence over root's.
+    with caplog.at_level("DEBUG", logger="app"):
+        pipeline_module.run()
+
+    assert any(
+        "Scored 'An SEO Article'" in r.message and "'SEO'" in r.message for r in caplog.records
+    )
+
+
 def test_run_handles_no_raw_articles_without_crashing(monkeypatch, caplog):
     monkeypatch.setattr(pipeline_module, "load_topics", lambda: [])
     monkeypatch.setattr(pipeline_module, "read_raw_articles", lambda: [])
