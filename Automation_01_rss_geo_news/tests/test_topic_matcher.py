@@ -129,3 +129,23 @@ def test_no_topics_configured_means_nothing_matches():
     scored = score_article(article, [])
     assert scored.matched_topics == []
     assert scored.is_relevant is False
+
+
+def test_does_not_match_short_keyword_as_substring_of_unrelated_word():
+    # "GEO" must not match inside "geography"/"geological" — a real
+    # false positive found and fixed in Sprint 13.
+    article = _article(
+        title="A Guide to Geography and Geological Surveys",
+        summary="This article has nothing to do with search marketing.",
+    )
+    scored = score_article(article, TOPICS)
+    assert scored.matched_topics == []
+    assert scored.relevance_score == 0
+
+
+def test_matches_keyword_attached_to_punctuation():
+    # Word-boundary matching should still catch a keyword glued to
+    # punctuation, just not glued to other word characters.
+    article = _article(title="A GEO-focused content strategy")
+    scored = score_article(article, TOPICS)
+    assert "GEO" in scored.matched_topics

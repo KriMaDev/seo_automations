@@ -35,6 +35,19 @@ def _searchable_text(article: Article) -> str:
     return " ".join(parts).lower()
 
 
+def _keyword_matches(keyword: str, text: str) -> bool:
+    """Whole-word, case-insensitive match of keyword within text.
+
+    Plain substring matching would let short acronym keywords (SEO,
+    GEO, AEO, SMO) false-positive inside unrelated words — "GEO" would
+    match inside "geography" or "geological". Word-boundary matching
+    avoids that while still matching a keyword glued to punctuation
+    (e.g. "GEO-focused", "SEO's").
+    """
+    pattern = r"\b" + re.escape(keyword.lower()) + r"\b"
+    return re.search(pattern, text) is not None
+
+
 def score_article(article: Article, topics: List[Topic]) -> ScoredArticle:
     """Score one article against the configured topics.
 
@@ -53,7 +66,7 @@ def score_article(article: Article, topics: List[Topic]) -> ScoredArticle:
     for topic in topics:
         topic_matched = False
         for keyword in topic.keywords:
-            if keyword.lower() in text:
+            if _keyword_matches(keyword, text):
                 matched_keywords.add(keyword.lower())
                 topic_matched = True
         if topic_matched:
