@@ -191,3 +191,33 @@ generating the videos themselves. It does not currently:
 - **A topic in `config/topics.yaml` always shows `0` matches** — check
   the "Topic breakdown" line in the log after running Command 2. If a
   topic never matches anything, its keyword list may need broadening.
+
+## A note on the collected data
+
+This project only stores the article metadata that feeds themselves
+publish (title, a short excerpt, link, publish date) — it never
+fetches or republishes full article text, and `data/raw_articles/`,
+`data/processed/`, and `data/outputs/` are all excluded from version
+control (see `.gitignore`). The code is open source; the news content
+it collects belongs to its original publishers, and nothing here
+redistributes it.
+
+## License
+
+[MIT](../LICENSE) — same license as the rest of the repository.
+
+### Third-party libraries
+
+This automation depends on the following open-source packages (see
+`requirements.txt` for exact versions), each under a permissive
+license with no conflicts with the MIT license above:
+
+| Package | License |
+|---|---|
+| [pydantic](https://github.com/pydantic/pydantic) | MIT |
+| [pytest](https://github.com/pytest-dev/pytest) | MIT |
+| [PyYAML](https://pyyaml.org/) | MIT |
+| [feedparser](https://github.com/kurtmckee/feedparser) | BSD-2-Clause |
+| [feedparser-sgmllib](https://pypi.org/project/feedparser-sgmllib/) | PSF-2.0 |
+
+Developed with the assistance of [Claude Code](https://claude.com/claude-code) (Anthropic).

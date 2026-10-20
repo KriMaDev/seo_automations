@@ -11,10 +11,17 @@ env/
 
 # Environment variables / secrets
 .env
-*.env.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
 
 # Logs (keep the folder, ignore generated log files)
 **/logs/*.log
+*.log
 
 # Collected/generated data (keep the folder structure, ignore contents)
 **/data/raw_articles/*
@@ -28,8 +35,10 @@ env/
 .vscode/
 .idea/
 
-# Windows folder customization noise
+# OS noise
 desktop.ini
+.DS_Store
+Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
